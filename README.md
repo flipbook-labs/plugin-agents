@@ -24,7 +24,8 @@ type Context = { plugin: Plugin }
 
 local config: AgentGateway.Config = {
 	name = "MyPluginGateway",
-	protocolVersion = 1,
+	description = "Actions for driving MyPlugin.",
+	instructions = "Insert parts with insertPart. Paths are slash-separated from the DataModel root.",
 }
 
 local context: Context = { plugin = plugin }
@@ -42,6 +43,9 @@ local actions: { AgentGateway.Action<Context> } = {
 		},
 		run = function(ctx, params)
 			local part = Instance.new("Part")
+			if type(params.name) == "string" then
+				part.Name = params.name :: string
+			end
 			part.Anchored = true
 			part.Parent = workspace
 			return { name = part.Name }
@@ -55,19 +59,30 @@ local cleanup = AgentGateway.createGateway(registry, config)
 plugin.Unloading:Connect(cleanup)
 ```
 
-An agent then talks to the gateway `BindableFunction` (parented to `CoreGui` by default):
+The registry validates incoming params against each action's `inputSchema` (required params, declared types, `enum` values, unknown-param rejection) before `run` is called, and returns schema-quoting errors to the caller — actions only need to enforce what a schema can't express. Action results must be JSON-encodable tables.
+
+`config.instructions` is free-form prose for agents. It is returned from the gateway's `list` method, so it's the first thing an agent reads — use it for workflow guidance: what to call first, readiness rules, caveats.
+
+## How agents find and use the gateway
+
+Every gateway `BindableFunction` (parented to `CoreGui` by default) is tagged with the `AgentGateway` CollectionService tag and carries self-describing attributes (`Description`, `Usage`, `ProtocolVersion`), so an agent needs no prior knowledge to find it:
 
 ```lua
-local gateway = game:GetService("CoreGui").MyPluginGateway
+local CollectionService = game:GetService("CollectionService")
+local gateway = CollectionService:GetTagged("AgentGateway")[1]
 
--- Discover available actions
+-- Discover: identity, instructions, and available actions with input schemas
 gateway:Invoke({ method = "list" })
 
 -- Invoke one
 gateway:Invoke({ method = "call", action = "insertPart", params = { name = "AgentPart" } })
 ```
 
-For a complete, runnable plugin see [`examples/agent-plugin`](examples/agent-plugin).
+Responses are always `{ ok: boolean, result: any?, error: string? }`, and every error message is written to teach the caller the fix — malformed requests restate the request grammar, unknown actions list the valid names, and invalid params quote the schema.
+
+Agent-facing runbooks live in [`.agents/skills`](.agents/skills): [`use-agent-gateway`](.agents/skills/use-agent-gateway/SKILL.md) covers Studio MCP setup, discovery, and the full protocol — it's the skill to copy or reference from repos that consume AgentGateway.
+
+For a complete, runnable plugin see [`examples/agent-plugin`](examples/agent-plugin), and the [`e2e`](.agents/skills/e2e/SKILL.md) skill for the agent↔plugin round-trip test.
 
 ## License
 

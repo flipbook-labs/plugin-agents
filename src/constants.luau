@@ -1,0 +1,33 @@
+-- The protocol version is owned by this library, not by consumers: it
+-- describes the request/response contract implemented in createGateway and
+-- createActionRegistry, and bumps when that contract changes.
+--
+-- Version history:
+--   1 — list/call, no params validation, terse errors
+--   2 — manifest carries name/description/instructions, params validated
+--       against inputSchema, discovery tag + attributes, teaching errors
+local PROTOCOL_VERSION = 2
+
+-- Every gateway BindableFunction is tagged with this CollectionService tag so
+-- an agent with zero prior knowledge can find all gateways in a place:
+--
+--   game:GetService("CollectionService"):GetTagged("AgentGateway")
+local TAG = "AgentGateway"
+
+-- One-line protocol summary stored as a "Usage" attribute on the gateway
+-- instance, readable without invoking it (e.g. through a data-model inspector).
+local USAGE = 'This is an AgentGateway. gateway:Invoke({method="list"}) lists actions and their'
+	.. ' input schemas; gateway:Invoke({method="call", action="<name>", params={...}}) invokes'
+	.. " one. Responses are {ok: boolean, result: any?, error: string?}."
+
+-- Appended to every malformed-request error so a wrong first guess still
+-- teaches the full request grammar.
+local REQUEST_GRAMMAR = 'Expected {method = "list"} to list available actions and their input'
+	.. ' schemas, or {method = "call", action = "<actionName>", params = {...}} to invoke one.'
+
+return {
+	PROTOCOL_VERSION = PROTOCOL_VERSION,
+	TAG = TAG,
+	USAGE = USAGE,
+	REQUEST_GRAMMAR = REQUEST_GRAMMAR,
+}

@@ -1,4 +1,9 @@
+local HttpService = game:GetService("HttpService")
+
+local constants = require("@root/constants")
 local types = require("@root/types")
+local validateInputSchema = require("@root/validateInputSchema")
+local validateParams = require("@root/validateParams")
 
 type Action<Context> = types.Action<Context>
 type ActionResult = types.ActionResult
@@ -30,34 +35,69 @@ local function createActionRegistry<Context>(
 			error(`duplicate action name: "{action.name}"`)
 		end
 		nameSet[action.name] = true
+
+		validateInputSchema(action.name, action.inputSchema)
 	end
 
 	local actionMap: { [string]: Action<Context> } = {}
+	local sortedActionNames: { string } = {}
 	for _, action in snapshot do
 		actionMap[action.name] = action
+		table.insert(sortedActionNames, action.name)
 	end
+	table.sort(sortedActionNames)
 
 	local function dispatch(name: string, params: unknown?): ActionResult
+		local result: ActionResult
+
 		local action = actionMap[name]
 		if action == nil then
-			return {
+			result = {
 				ok = false,
-				error = `unknown action: {name}`,
-			}
-		end
-
-		local ok, value = pcall(action.run, context, params)
-		if ok then
-			return {
-				ok = true,
-				result = value,
+				error = if #sortedActionNames == 0
+					then `unknown action: {name} — this gateway has no registered actions`
+					else `unknown action: {name} — available actions: {table.concat(sortedActionNames, ", ")}.`
+						.. ' Use {method = "list"} for descriptions and input schemas.',
 			}
 		else
-			return {
-				ok = false,
-				error = tostring(value),
-			}
+			local validated, paramsError = validateParams(name, action.inputSchema, params)
+			if validated == nil then
+				result = {
+					ok = false,
+					error = paramsError,
+				}
+			else
+				local ok, value = pcall(action.run, context, validated)
+				if not ok then
+					result = {
+						ok = false,
+						error = tostring(value),
+					}
+				elseif value ~= nil and not pcall(HttpService.JSONEncode, HttpService, value) then
+					-- Agents read results by JSON-encoding them on their side of
+					-- the boundary; a result that can't encode (Instance,
+					-- mixed-key table, cycle) would fail there, where it looks
+					-- like the agent's fault instead of the action's.
+					result = {
+						ok = false,
+						error = `action {name} returned a result that cannot be JSON-encoded;`
+							.. " this is a bug in the action, not in the request",
+					}
+				else
+					result = {
+						ok = true,
+						result = value,
+					}
+				end
+			end
 		end
+
+		if config.onActionResult ~= nil then
+			-- Observability only — a throwing observer must not break dispatch.
+			pcall(config.onActionResult, name, result)
+		end
+
+		return result
 	end
 
 	local function manifest(): Manifest
@@ -73,7 +113,10 @@ local function createActionRegistry<Context>(
 		end
 
 		return {
-			protocolVersion = config.protocolVersion,
+			protocolVersion = constants.PROTOCOL_VERSION,
+			name = config.name,
+			description = config.description,
+			instructions = config.instructions,
 			actions = entries,
 		}
 	end
