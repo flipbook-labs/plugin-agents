@@ -128,6 +128,7 @@ describe("createActionRegistry", function()
 
 			expect(result.ok).toBe(false)
 			expect(result.error :: string).toContain("cannot be JSON-encoded")
+			expect(result.error :: string).toContain("result.instance is an Instance")
 		end)
 
 		it("allows a nil action result", function()

@@ -43,9 +43,7 @@ local function validateInputSchema(actionName: string, inputSchema: InputSchema?
 			local enum = property.enum
 			if enum ~= nil then
 				if type(enum) ~= "table" or #enum == 0 then
-					error(
-						`action "{actionName}": inputSchema property "{propertyName}" enum must be a non-empty array`
-					)
+					error(`action "{actionName}": inputSchema property "{propertyName}" enum must be a non-empty array`)
 				end
 			end
 		end
@@ -58,9 +56,7 @@ local function validateInputSchema(actionName: string, inputSchema: InputSchema?
 				error(`action "{actionName}": inputSchema.required entries must be strings`)
 			end
 			if properties == nil or properties[requiredName] == nil then
-				error(
-					`action "{actionName}": inputSchema.required names "{requiredName}" which is not in properties`
-				)
+				error(`action "{actionName}": inputSchema.required names "{requiredName}" which is not in properties`)
 			end
 		end
 	end

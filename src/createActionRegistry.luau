@@ -1,9 +1,8 @@
-local HttpService = game:GetService("HttpService")
-
 local constants = require("@root/constants")
 local types = require("@root/types")
 local validateInputSchema = require("@root/validateInputSchema")
 local validateParams = require("@root/validateParams")
+local validateResult = require("@root/validateResult")
 
 type Action<Context> = types.Action<Context>
 type ActionResult = types.ActionResult
@@ -73,21 +72,25 @@ local function createActionRegistry<Context>(
 						ok = false,
 						error = tostring(value),
 					}
-				elseif value ~= nil and not pcall(HttpService.JSONEncode, HttpService, value) then
-					-- Agents read results by JSON-encoding them on their side of
-					-- the boundary; a result that can't encode (Instance,
-					-- mixed-key table, cycle) would fail there, where it looks
-					-- like the agent's fault instead of the action's.
-					result = {
-						ok = false,
-						error = `action {name} returned a result that cannot be JSON-encoded;`
-							.. " this is a bug in the action, not in the request",
-					}
 				else
-					result = {
-						ok = true,
-						result = value,
-					}
+					-- Agents read results by JSON-encoding them on their side
+					-- of the boundary; a result that can't encode (Instance,
+					-- mixed-key table, cycle) would fail or silently lose data
+					-- there, where it looks like the agent's fault instead of
+					-- the action's.
+					local resultProblem = validateResult(value)
+					if resultProblem ~= nil then
+						result = {
+							ok = false,
+							error = `action {name} returned a result that cannot be JSON-encoded`
+								.. ` ({resultProblem}); this is a bug in the action, not in the request`,
+						}
+					else
+						result = {
+							ok = true,
+							result = value,
+						}
+					end
 				end
 			end
 		end
