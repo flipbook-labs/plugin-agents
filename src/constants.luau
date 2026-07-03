@@ -8,8 +8,10 @@
 --       against inputSchema, discovery tag + attributes, teaching errors
 local PROTOCOL_VERSION = 2
 
--- Every gateway BindableFunction is tagged with this CollectionService tag so
--- an agent with zero prior knowledge can find all gateways in a place:
+-- Every gateway BindableFunction is tagged with this CollectionService tag.
+-- Knowing this one convention — from a skill, repo instructions, or a prompt —
+-- is enough to find every gateway in a place, whatever it's named or parented
+-- to and whichever plugin created it:
 --
 --   game:GetService("CollectionService"):GetTagged("AgentGateway")
 local TAG = "AgentGateway"

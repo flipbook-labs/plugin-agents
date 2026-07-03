@@ -42,7 +42,7 @@ Useful Studio MCP tools:
 
 ## Discover gateways
 
-Every gateway `BindableFunction` carries the `AgentGateway` CollectionService tag. No prior knowledge of names or locations is needed:
+Every gateway `BindableFunction` carries the `AgentGateway` CollectionService tag. This one convention replaces all plugin-specific knowledge — no gateway names or locations needed:
 
 ```lua
 local CollectionService = game:GetService("CollectionService")

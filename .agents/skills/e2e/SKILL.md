@@ -69,7 +69,7 @@ That line means the plugin ran and the gateway exists. If you don't see it, the 
 
 ## 4. Discover the gateway
 
-Every gateway BindableFunction carries the `AgentGateway` CollectionService tag, so an agent with no prior knowledge can find them all. Run this Luau in Studio (via the Studio MCP run-code tool, or the Command Bar):
+Every gateway BindableFunction carries the `AgentGateway` CollectionService tag, so this one convention finds them all — no plugin-specific names or locations needed. Run this Luau in Studio (via the Studio MCP run-code tool, or the Command Bar):
 
 ```lua
 local CollectionService = game:GetService("CollectionService")

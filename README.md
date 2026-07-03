@@ -65,7 +65,7 @@ The registry validates incoming params against each action's `inputSchema` (requ
 
 ## How agents find and use the gateway
 
-Every gateway `BindableFunction` (parented to `CoreGui` by default) is tagged with the `AgentGateway` CollectionService tag and carries self-describing attributes (`Description`, `Usage`, `ProtocolVersion`), so an agent needs no prior knowledge to find it:
+Every gateway `BindableFunction` (parented to `CoreGui` by default) is tagged with the `AgentGateway` CollectionService tag and carries self-describing attributes (`Description`, `Usage`, `ProtocolVersion`). An agent still has to be told to look — that's the job of the [`use-agent-gateway`](.agents/skills/use-agent-gateway/SKILL.md) skill, a consumer repo's own instructions, or the user's prompt — but the tag shrinks what needs telling to one convention shared by every plugin built on this library, independent of gateway names, parents, or which plugins happen to be installed:
 
 ```lua
 local CollectionService = game:GetService("CollectionService")
