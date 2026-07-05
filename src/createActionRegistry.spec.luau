@@ -254,54 +254,6 @@ describe("createActionRegistry", function()
 		end)
 	end)
 
-	describe("onActionResult", function()
-		it("observes successful and failed dispatches", function()
-			local observed: { { name: string, ok: boolean } } = {}
-			local config = {
-				name = "TestGateway",
-				onActionResult = function(name: string, result: any)
-					table.insert(observed, { name = name, ok = result.ok })
-				end,
-			}
-			local registry = createActionRegistry(config, defaultContext, {
-				makeAction("works", function(): any
-					return "fine"
-				end),
-				makeAction("fails", function(): any
-					error("nope")
-				end),
-			})
-
-			registry.dispatch("works")
-			registry.dispatch("fails")
-			registry.dispatch("missing")
-
-			expect(#observed).toBe(3)
-			expect(observed[1]).toEqual({ name = "works", ok = true })
-			expect(observed[2]).toEqual({ name = "fails", ok = false })
-			expect(observed[3]).toEqual({ name = "missing", ok = false })
-		end)
-
-		it("does not break dispatch when the observer throws", function()
-			local config = {
-				name = "TestGateway",
-				onActionResult = function()
-					error("observer bug")
-				end,
-			}
-			local registry = createActionRegistry(config, defaultContext, {
-				makeAction("works", function(): any
-					return "fine"
-				end),
-			})
-
-			local result = registry.dispatch("works")
-
-			expect(result.ok).toBe(true)
-			expect(result.result).toBe("fine")
-		end)
-	end)
-
 	describe("registration validation", function()
 		it("throws when an action name is empty", function()
 			expect(function()

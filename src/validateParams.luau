@@ -13,6 +13,9 @@ local function typeMatches(value: unknown, schemaType: string): boolean
 	elseif schemaType == "boolean" then
 		return type(value) == "boolean"
 	elseif schemaType == "object" or schemaType == "array" then
+		-- Coarse on purpose: both accept any table, so this can't tell a
+		-- dictionary from a sequence. Element/field shape and object-vs-array
+		-- are the action's to enforce.
 		return type(value) == "table"
 	end
 	return false

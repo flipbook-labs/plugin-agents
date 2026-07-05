@@ -16,16 +16,28 @@ local PROTOCOL_VERSION = 2
 --   game:GetService("CollectionService"):GetTagged("AgentGateway")
 local TAG = "AgentGateway"
 
+-- The two request forms, written once so the "Usage" attribute and the error
+-- grammar quote them identically. Change the wording or spacing here, not in
+-- the two prose strings below (the skill in .agents/skills is a third copy,
+-- but Markdown can't share a constant — keep it in sync by hand).
+local LIST_FORM = '{method = "list"}'
+local CALL_FORM = '{method = "call", action = "<actionName>", params = {...}}'
+
 -- One-line protocol summary stored as a "Usage" attribute on the gateway
 -- instance, readable without invoking it (e.g. through a data-model inspector).
-local USAGE = 'This is an AgentGateway. gateway:Invoke({method="list"}) lists actions and their'
-	.. ' input schemas; gateway:Invoke({method="call", action="<name>", params={...}}) invokes'
-	.. " one. Responses are {ok: boolean, result: any?, error: string?}."
+local USAGE = "This is an AgentGateway. Call gateway:Invoke(request), where request is "
+	.. LIST_FORM
+	.. " to list actions and their input schemas, or "
+	.. CALL_FORM
+	.. " to invoke one. Responses are {ok: boolean, result: any?, error: string?}."
 
 -- Appended to every malformed-request error so a wrong first guess still
 -- teaches the full request grammar.
-local REQUEST_GRAMMAR = 'Expected {method = "list"} to list available actions and their input'
-	.. ' schemas, or {method = "call", action = "<actionName>", params = {...}} to invoke one.'
+local REQUEST_GRAMMAR = "Expected "
+	.. LIST_FORM
+	.. " to list available actions and their input schemas, or "
+	.. CALL_FORM
+	.. " to invoke one."
 
 return {
 	PROTOCOL_VERSION = PROTOCOL_VERSION,

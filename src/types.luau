@@ -1,3 +1,8 @@
+-- `type` is one of "string", "number", "integer", "boolean", "object", or
+-- "array". Validation is shape-only and coarse for the two container types:
+-- both "object" and "array" check only that the value is a table, so a schema
+-- can't distinguish a dictionary from a sequence — an action that needs that
+-- distinction (or any element/field shape) must check it in run.
 export type InputSchemaProperty = {
 	type: string,
 	description: string?,
@@ -53,7 +58,6 @@ export type Config = {
 	description: string?,
 	instructions: string?,
 	parent: Instance?,
-	onActionResult: ((actionName: string, result: ActionResult) -> ())?,
 }
 
 export type GatewayRequest = {
