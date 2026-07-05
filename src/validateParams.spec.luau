@@ -43,6 +43,13 @@ describe("validateParams", function()
 		expect(err).toBe("invalid params for act: params must be a table, got string")
 	end)
 
+	it("rejects array-shaped params even with no schema", function()
+		local params, err = validateParams("act", nil, { "a", "b" })
+
+		expect(params).toBeNil()
+		expect(err :: string).toContain("params must be an object with string keys, got an array")
+	end)
+
 	it("rejects nil params when the schema has required properties", function()
 		local params, err = validateParams("act", SCHEMA, nil)
 

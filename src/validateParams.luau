@@ -127,6 +127,17 @@ local function validateParams(
 
 	local fields = params :: { [string]: unknown }
 
+	-- The protocol models params as a named-argument object, and run's contract
+	-- is { [string]: unknown }. Enforce string keys here — before the
+	-- schema-less shortcut below — so every action, schema or not, is handed the
+	-- shape its type promises rather than a stray array like { "a", "b" }.
+	for key in fields do
+		if type(key) ~= "string" then
+			return nil,
+				`invalid params for {actionName}: params must be an object with string keys, got {describeActual(fields)}`
+		end
+	end
+
 	if inputSchema == nil then
 		return fields, nil
 	end
@@ -145,11 +156,6 @@ local function validateParams(
 	end
 
 	for name, value in fields do
-		if type(name) ~= "string" then
-			table.insert(problems, `param keys must be strings, got {type(name)} ({tostring(name)})`)
-			continue
-		end
-
 		local property = properties[name]
 		if property == nil then
 			local valid = sortedNames(properties)
