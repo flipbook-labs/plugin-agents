@@ -81,6 +81,31 @@ describe("validateParams", function()
 		expect(err :: string).toContain('param "count" must be an integer, got number')
 	end)
 
+	it("rejects an array for an object param", function()
+		local _, err = validateParams("act", SCHEMA, { story = "s", controls = { "a", "b" } })
+
+		expect(err :: string).toContain('param "controls" must be an object, got an array')
+	end)
+
+	it("rejects an object for an array param", function()
+		local _, err = validateParams("act", SCHEMA, { story = "s", tags = { label = "x" } })
+
+		expect(err :: string).toContain('param "tags" must be an array, got an object')
+	end)
+
+	it("accepts an empty table as either an object or an array", function()
+		local _, err = validateParams("act", SCHEMA, { story = "s", controls = {}, tags = {} })
+
+		expect(err).toBeNil()
+	end)
+
+	it("rejects a table with mixed keys", function()
+		-- selene: allow(mixed_table)
+		local _, err = validateParams("act", SCHEMA, { story = "s", controls = { "a", named = true } })
+
+		expect(err :: string).toContain('param "controls" must be an object, got a table with mixed keys')
+	end)
+
 	it("rejects an enum violation and lists the allowed values", function()
 		local _, err = validateParams("act", SCHEMA, { story = "s", screen = "Nope" })
 

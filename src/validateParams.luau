@@ -3,6 +3,38 @@ local types = require("@root/types")
 type InputSchema = types.InputSchema
 type InputSchemaProperty = types.InputSchemaProperty
 
+-- An empty table is an ambiguous `{}`: JSON's `[]` and `{}` both decode to it,
+-- so it can't be told apart and is accepted as either an array or an object.
+-- Non-empty tables classify by their keys.
+local function isArrayLike(tbl: { [any]: unknown }): boolean
+	if next(tbl) == nil then
+		return true
+	end
+	-- A contiguous 1..n sequence: every key is a positive integer and the count
+	-- matches `#`. A string key, a hole, or an out-of-range index fails one of
+	-- these (a hole makes count ~= #, mirroring validateResult's array check).
+	local count = 0
+	for key in tbl do
+		if type(key) ~= "number" or key % 1 ~= 0 or key < 1 then
+			return false
+		end
+		count += 1
+	end
+	return count == #tbl
+end
+
+local function isObjectLike(tbl: { [any]: unknown }): boolean
+	if next(tbl) == nil then
+		return true
+	end
+	for key in tbl do
+		if type(key) ~= "string" then
+			return false
+		end
+	end
+	return true
+end
+
 local function typeMatches(value: unknown, schemaType: string): boolean
 	if schemaType == "string" then
 		return type(value) == "string"
@@ -12,11 +44,10 @@ local function typeMatches(value: unknown, schemaType: string): boolean
 		return type(value) == "number" and (value :: number) % 1 == 0
 	elseif schemaType == "boolean" then
 		return type(value) == "boolean"
-	elseif schemaType == "object" or schemaType == "array" then
-		-- Coarse on purpose: both accept any table, so this can't tell a
-		-- dictionary from a sequence. Element/field shape and object-vs-array
-		-- are the action's to enforce.
-		return type(value) == "table"
+	elseif schemaType == "object" then
+		return type(value) == "table" and isObjectLike(value :: { [any]: unknown })
+	elseif schemaType == "array" then
+		return type(value) == "table" and isArrayLike(value :: { [any]: unknown })
 	end
 	return false
 end
@@ -31,6 +62,24 @@ local function quoted(value: unknown): string
 		return `"{value}"`
 	end
 	return tostring(value)
+end
+
+-- Names the JSON-ish shape the caller actually sent, so an array/object
+-- mismatch reports "got an object" rather than the unhelpful "got table"
+-- (every non-scalar is a table). Scalars keep their bare type name.
+local function describeActual(value: unknown): string
+	if type(value) ~= "table" then
+		return type(value)
+	end
+	local tbl = value :: { [any]: unknown }
+	if next(tbl) == nil then
+		return "an empty table"
+	elseif isArrayLike(tbl) then
+		return "an array"
+	elseif isObjectLike(tbl) then
+		return "an object"
+	end
+	return "a table with mixed keys"
 end
 
 -- "(string) — Path to a .story ModuleScript" or "(string)"; quoting the schema
@@ -115,7 +164,7 @@ local function validateParams(
 		if not typeMatches(value, property.type) then
 			table.insert(
 				problems,
-				`param "{name}" must be {withArticle(property.type)}, got {type(value)}{describeProperty(property)}`
+				`param "{name}" must be {withArticle(property.type)}, got {describeActual(value)}{describeProperty(property)}`
 			)
 			continue
 		end
