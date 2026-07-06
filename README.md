@@ -1,3 +1,6 @@
+> [!WARNING]
+> 🚧 **SLOP ALERT** 🚧: This repository is largely AI-generated. We make a concerted effort to rein in the agent PRs before merging, but bugs can still slip through.
+
 # AgentGateway
 
 [![CI](https://github.com/flipbook-labs/agent-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/flipbook-labs/agent-gateway/actions/workflows/ci.yml)
