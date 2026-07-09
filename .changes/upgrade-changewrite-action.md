@@ -3,4 +3,4 @@ bump: patch
 category: Changes
 ---
 
-Upgrade the changewrite release action to v0.5.0, which downloads the prebuilt binary instead of compiling it on every run.
+Upgrade the Changewrite release action to `v0.7.0` and adopt its `publish-lock` check.
