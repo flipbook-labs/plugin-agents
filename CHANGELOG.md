@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 
 
+## v0.2.1
+
+### Changes
+
+- Upgrade the Changewrite release action to `v0.7.0` and adopt its `publish-lock` check.
+
+- Release automation reads the public Flipbook Backend App Client ID from an organization variable.
+
+### Dependencies
+
+- Add AgentSkills `v0.4.0` as a dev dependency so agents can bootstrap the shared skills library.
+
+- Upgrade FlipbookBatteries `v0.10.1` → `v0.12.0` and Lute `v1.0.1-nightly.20260508` → `v1.0.1-nightly.20260701`.
+
+
 ## v0.2.0
 
 ### Changes
